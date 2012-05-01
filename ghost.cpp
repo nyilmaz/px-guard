@@ -50,42 +50,6 @@
 #define __STORMLIB_SELF__
 #include <stormlib/StormLib.h>
 
-/*
-
-#include "ghost.h"
-#include "util.h"
-#include "crc32.h"
-#include "sha1.h"
-#include "csvparser.h"
-#include "config.h"
-#include "language.h"
-#include "socket.h"
-#include "commandpacket.h"
-#include "ghostdb.h"
-#include "ghostdbsqlite.h"
-#include "ghostdbmysql.h"
-#include "bncsutilinterface.h"
-#include "warden.h"
-#include "bnlsprotocol.h"
-#include "bnlsclient.h"
-#include "bnetprotocol.h"
-#include "bnet.h"
-#include "map.h"
-#include "packed.h"
-#include "savegame.h"
-#include "replay.h"
-#include "gameslot.h"
-#include "gameplayer.h"
-#include "gameprotocol.h"
-#include "gpsprotocol.h"
-#include "game_base.h"
-#include "game.h"
-#include "game_admin.h"
-#include "stats.h"
-#include "statsdota.h"
-#include "sqlite3.h"
-
-*/
 
 #ifdef WIN32
  #include <windows.h>
