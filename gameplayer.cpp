@@ -29,7 +29,6 @@
 #include "gameprotocol.h"
 #include "gpsprotocol.h"
 #include "game_base.h"
-#include "ghostdb.h"
 
 //
 // CPotentialPlayer
@@ -230,10 +229,6 @@ CGamePlayer :: CGamePlayer( CGameProtocol *nProtocol, CBaseGame *nGame, CTCPSock
 	m_GProxyDisconnectNoticeSent = false;
 	m_GProxyReconnectKey = GetTicks( );
 	m_LastGProxyAckTime = 0;
-	m_FingerSent = false;
-	m_Finger = 0;
-	m_FFVoteSet = false;
-	m_RMKVoteSet = false;
 }
 
 CGamePlayer :: CGamePlayer( CPotentialPlayer *potential, unsigned char nPID, string nJoinedRealm, string nName, BYTEARRAY nInternalIP, bool nReserved ) : CPotentialPlayer( potential->m_Protocol, potential->m_Game, potential->GetSocket( ) )
@@ -286,9 +281,6 @@ CGamePlayer :: CGamePlayer( CPotentialPlayer *potential, unsigned char nPID, str
 	m_GProxyDisconnectNoticeSent = false;
 	m_GProxyReconnectKey = GetTicks( );
 	m_LastGProxyAckTime = 0;
-	m_FingerSent = false;
-	m_Finger = 0;
-	m_FFVoteSet = false;
 }
 
 CGamePlayer :: ~CGamePlayer( )
@@ -336,17 +328,7 @@ bool CGamePlayer :: Update( void *fd )
 {
 	// wait 4 seconds after joining before sending the /whois or /w
 	// if we send the /whois too early battle.net may not have caught up with where the player is and return erroneous results
-	if( !m_JoinedRealm.empty( ) && !m_FingerSent ){
-		for( vector<CBNET *> :: iterator i = m_Game->m_GHost->m_BNETs.begin( ); i != m_Game->m_GHost->m_BNETs.end( ); i++ )
-		{
-			if( (*i)->GetServer( ) == m_JoinedRealm )
-			{				
-				(*i)->QueueChatCommand("/finger " + m_Name);
-				
-			}
-		}
-		m_FingerSent = true;
-	}
+
 	if( m_WhoisShouldBeSent && !m_Spoofed && !m_WhoisSent && !m_JoinedRealm.empty( ) && GetTime( ) - m_JoinTime >= 4 )
 	{
 		// todotodo: we could get kicked from battle.net for sending a command with invalid characters, do some basic checking
@@ -362,10 +344,8 @@ bool CGamePlayer :: Update( void *fd )
 					else
 						(*i)->QueueChatCommand( "/whois " + m_Name );
 				}
-				else if( m_Game->GetGameState( ) == GAME_PRIVATE ){
+				else if( m_Game->GetGameState( ) == GAME_PRIVATE )
 					(*i)->QueueChatCommand( m_Game->m_GHost->m_Language->SpoofCheckByReplying( ), m_Name, true );
-					(*i)->QueueChatCommand("/finger " + m_Name);
-				}
 			}
 		}
 
@@ -596,14 +576,6 @@ void CGamePlayer :: ProcessPackets( )
 
 			if( Packet->GetID( ) == CGPSProtocol :: GPS_INIT )
 			{
-				if(UTIL_ToString(Data[4])!= m_Game->m_GHost->m_ReconnectVersion && !m_Game->m_GHost->m_ReconnectVersion.empty( ))
-				{//you must add in ghost.cfg the line bot_reconnectversion = 5 
-					//5 = current version of gproxy and if someone doesn't use new gproyx hostbot kick him you get it?
-					m_Game->KickHacker(m_Name,"2");
-					CONSOLE_Print( "[GAME: " + m_Game->GetGameName( ) + "] player [" + m_Name + "] is using wrong gproxy." );
-					//delete Packet;
-					//return;
-				}
 				if( m_Game->m_GHost->m_Reconnect )
 				{
 					m_GProxy = true;

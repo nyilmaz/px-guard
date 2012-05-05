@@ -222,7 +222,7 @@ CCallableBanCheck *CGHostDB :: ThreadedBanCheck( string server, string user, str
 	return NULL;
 }
 
-CCallableBanAdd *CGHostDB :: ThreadedBanAdd( string server, string user, string ip, string gamename, string admin, string reason, bool isFirstLeaver )
+CCallableBanAdd *CGHostDB :: ThreadedBanAdd( string server, string user, string ip, string gamename, string admin, string reason )
 {
 	return NULL;
 }
@@ -619,11 +619,3 @@ CDBDotAPlayerSummary :: ~CDBDotAPlayerSummary( )
 {
 
 }
-
-SendMsg :: SendMsg(std::string nUser, std::string nMsg, uint32_t nTime){
-	m_User = nUser;
-	m_Msg = nMsg;
-	m_Time = nTime;
-}
-
-SendMsg :: ~SendMsg(){}

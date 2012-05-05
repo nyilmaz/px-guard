@@ -51,7 +51,6 @@ class CDBGame;
 class CDBGamePlayer;
 class CDBGamePlayerSummary;
 class CDBDotAPlayerSummary;
-class SendMsg;
 
 typedef pair<uint32_t,string> VarP;
 
@@ -112,7 +111,7 @@ public:
 	virtual CCallableAdminList *ThreadedAdminList( string server );
 	virtual CCallableBanCount *ThreadedBanCount( string server );
 	virtual CCallableBanCheck *ThreadedBanCheck( string server, string user, string ip );
-	virtual CCallableBanAdd *ThreadedBanAdd( string server, string user, string ip, string gamename, string admin, string reason, bool isFirstLeaver );
+	virtual CCallableBanAdd *ThreadedBanAdd( string server, string user, string ip, string gamename, string admin, string reason );
 	virtual CCallableBanRemove *ThreadedBanRemove( string server, string user );
 	virtual CCallableBanRemove *ThreadedBanRemove( string user );
 	virtual CCallableBanList *ThreadedBanList( string server );
@@ -299,11 +298,10 @@ protected:
 	string m_GameName;
 	string m_Admin;
 	string m_Reason;
-	bool isFirstLeaver;
 	bool m_Result;
 
 public:
-	CCallableBanAdd( string nServer, string nUser, string nIP, string nGameName, string nAdmin, string nReason, bool nIsFirstLeaver ) : CBaseCallable( ), m_Server( nServer ), m_User( nUser ), m_IP( nIP ), m_GameName( nGameName ), m_Admin( nAdmin ), m_Reason( nReason ), m_Result( false ), isFirstLeaver( nIsFirstLeaver ) { }
+	CCallableBanAdd( string nServer, string nUser, string nIP, string nGameName, string nAdmin, string nReason ) : CBaseCallable( ), m_Server( nServer ), m_User( nUser ), m_IP( nIP ), m_GameName( nGameName ), m_Admin( nAdmin ), m_Reason( nReason ), m_Result( false ) { }
 	virtual ~CCallableBanAdd( );
 
 	virtual string GetServer( )				{ return m_Server; }
@@ -312,7 +310,6 @@ public:
 	virtual string GetGameName( )			{ return m_GameName; }
 	virtual string GetAdmin( )				{ return m_Admin; }
 	virtual string GetReason( )				{ return m_Reason; }
-	virtual bool GetIsFirstLeaver( )		{ return isFirstLeaver; }
 	virtual bool GetResult( )				{ return m_Result; }
 	virtual void SetResult( bool nResult )	{ m_Result = nResult; }
 };
@@ -835,23 +832,6 @@ public:
 	float GetAvgTowerKills( )			{ return m_TotalGames > 0 ? (float)m_TotalTowerKills / m_TotalGames : 0; }
 	float GetAvgRaxKills( )				{ return m_TotalGames > 0 ? (float)m_TotalRaxKills / m_TotalGames : 0; }
 	float GetAvgCourierKills( )			{ return m_TotalGames > 0 ? (float)m_TotalCourierKills / m_TotalGames : 0; }
-};
-
-class SendMsg
-{
-
-private:
-	string m_User;
-	string m_Msg;
-	uint32_t m_Time;	
-
-public:
-
-	SendMsg( string nUser, string nMsg, uint32_t nTime);
-	~SendMsg( );	
-	string GetUser( )			{ return m_User; }
-	string GetMsg( )			{ return m_Msg; }
-	uint32_t GetTime( )			{ return m_Time; }	
 };
 
 #endif

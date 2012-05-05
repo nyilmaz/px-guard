@@ -436,8 +436,3 @@ void CStatsDOTA :: Save( CGHost *GHost, CGHostDB *DB, uint32_t GameID )
 	else
 		CONSOLE_Print( "[STATSDOTA: " + m_Game->GetGameName( ) + "] unable to begin database transaction, data not saved" );
 }
-
-void CStatsDOTA :: SetWinner( uint32_t n_Winner )
-{
-    m_Winner = n_Winner;
-}

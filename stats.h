@@ -46,7 +46,6 @@ public:
 
 	virtual bool ProcessAction( CIncomingAction *Action );
 	virtual void Save( CGHost *GHost, CGHostDB *DB, uint32_t GameID );
-	virtual void SetWinner( uint32_t n_Winner );
 };
 
 #endif

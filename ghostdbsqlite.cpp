@@ -1529,7 +1529,7 @@ CCallableBanCheck *CGHostDBSQLite :: ThreadedBanCheck( string server, string use
 
 CCallableBanAdd *CGHostDBSQLite :: ThreadedBanAdd( string server, string user, string ip, string gamename, string admin, string reason )
 {
-	CCallableBanAdd *Callable = new CCallableBanAdd( server, user, ip, gamename, admin, reason, false );
+	CCallableBanAdd *Callable = new CCallableBanAdd( server, user, ip, gamename, admin, reason );
 	Callable->SetResult( BanAdd( server, user, ip, gamename, admin, reason ) );
 	Callable->SetReady( true );
 	return Callable;

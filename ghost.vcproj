@@ -194,7 +194,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\bncsutil\src;..\StormLib;..\zlib\include;..\mysql\include;C:\Users\px5x2\Desktop\boost\lib"
+				AdditionalIncludeDirectories="..\bncsutil\src;..\StormLib;..\zlib\include;..\mysql\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GHOST_MYSQL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -216,7 +216,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib winmm.lib zdll.lib StormLibRAS.lib libmysql.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="C:\Users\px5x2\Desktop\boost\lib;..\zlib\lib;..\mysql\lib\opt;..\boost\lib;&quot;C:\Program Files (x86)\boost\boost_1_46_1\lib\&quot;"
+				AdditionalLibraryDirectories="..\zlib\lib;..\mysql\lib\opt;..\boost\lib"
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				SubSystem="1"

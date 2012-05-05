@@ -44,7 +44,3 @@ void CStats :: Save( CGHost *GHost, CGHostDB *DB, uint32_t GameID )
 {
 
 }
-void CStats :: SetWinner( uint32_t n_Winner )
-{
-
-}

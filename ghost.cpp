@@ -50,6 +50,42 @@
 #define __STORMLIB_SELF__
 #include <stormlib/StormLib.h>
 
+/*
+
+#include "ghost.h"
+#include "util.h"
+#include "crc32.h"
+#include "sha1.h"
+#include "csvparser.h"
+#include "config.h"
+#include "language.h"
+#include "socket.h"
+#include "commandpacket.h"
+#include "ghostdb.h"
+#include "ghostdbsqlite.h"
+#include "ghostdbmysql.h"
+#include "bncsutilinterface.h"
+#include "warden.h"
+#include "bnlsprotocol.h"
+#include "bnlsclient.h"
+#include "bnetprotocol.h"
+#include "bnet.h"
+#include "map.h"
+#include "packed.h"
+#include "savegame.h"
+#include "replay.h"
+#include "gameslot.h"
+#include "gameplayer.h"
+#include "gameprotocol.h"
+#include "gpsprotocol.h"
+#include "game_base.h"
+#include "game.h"
+#include "game_admin.h"
+#include "stats.h"
+#include "statsdota.h"
+#include "sqlite3.h"
+
+*/
 
 #ifdef WIN32
  #include <windows.h>
@@ -366,6 +402,7 @@ CGHost :: CGHost( CConfig *CFG )
 	m_CurrentGame = NULL;
 	string DBType = CFG->GetString( "db_type", "sqlite3" );
 	CONSOLE_Print( "[GHOST] opening primary database" );
+	px_PGGuardPort = CFG->GetInt( "px_guard_port", 41412 );
 
 	if( DBType == "mysql" )
 	{
@@ -469,7 +506,6 @@ CGHost :: CGHost( CConfig *CFG )
 
 	m_HostPort = CFG->GetInt( "bot_hostport", 6112 );
 	m_Reconnect = CFG->GetInt( "bot_reconnect", 1 ) == 0 ? false : true;
-	m_ReconnectVersion = CFG->GetString( "bot_reconnectversion", "" );
 	m_ReconnectPort = CFG->GetInt( "bot_reconnectport", 6114 );
 	m_DefaultMap = CFG->GetString( "bot_defaultmap", "map" );
 	m_AdminGameCreate = CFG->GetInt( "admingame_create", 0 ) == 0 ? false : true;
@@ -534,8 +570,8 @@ CGHost :: CGHost( CConfig *CFG )
 		string PasswordHashType = CFG->GetString( Prefix + "custom_passwordhashtype", string( ) );
 		string PVPGNRealmName = CFG->GetString( Prefix + "custom_pvpgnrealmname", "PvPGN Realm" );
 		uint32_t MaxMessageLength = CFG->GetInt( Prefix + "custom_maxmessagelength", 200 );
-
-
+		px_Socket = new CUDPSocket( );
+		px_Server = new CUDPServer( );
 
 		if( Server.empty( ) )
 			break;
@@ -653,8 +689,6 @@ CGHost :: CGHost( CConfig *CFG )
 #else
 	CONSOLE_Print( "[GHOST] GHost++ Version " + m_Version + " (without MySQL support)" );
 #endif
-
-	
 }
 
 CGHost :: ~CGHost( )
@@ -693,6 +727,8 @@ CGHost :: ~CGHost( )
 	delete m_AdminMap;
 	delete m_AutoHostMap;
 	delete m_SaveGame;
+	delete px_Server;
+	delete px_Socket;
 }
 
 bool CGHost :: Update( long usecBlock )
@@ -850,6 +886,9 @@ bool CGHost :: Update( long usecBlock )
 		NumFDs++;
 	}
 
+	px_Server->SetFD(&fd, &send_fd, &nfds);
+	NumFDs++;
+
 	// before we call select we need to determine how long to block for
 	// previously we just blocked for a maximum of the passed usecBlock microseconds
 	// however, in an effort to make game updates happen closer to the desired latency setting we now use a dynamic block interval
@@ -903,10 +942,6 @@ bool CGHost :: Update( long usecBlock )
 		if( m_CurrentGame->Update( &fd, &send_fd ) )
 		{
 			CONSOLE_Print( "[GHOST] deleting current game [" + m_CurrentGame->GetGameName( ) + "]" );
-			for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
-			{
-				(*i)->QueueChatCommand("unhostlobby'"+m_CurrentGame->GetOwnerName() +"'"+m_CurrentGame->GetGameName(),"et", true);
-			}
 			delete m_CurrentGame;
 			m_CurrentGame = NULL;
 
@@ -1163,6 +1198,7 @@ void CGHost :: EventBNETConnected( CBNET *bnet )
 
 	if( m_CurrentGame )
 		m_CurrentGame->SendAllChat( m_Language->ConnectedToBNET( bnet->GetServer( ) ) );
+	SendToPGGuard( "SELAM", bnet);
 }
 
 void CGHost :: EventBNETDisconnected( CBNET *bnet )
@@ -1275,11 +1311,10 @@ void CGHost :: EventGameDeleted( CBaseGame *game )
 {
 	for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
 	{
-		//(*i)->QueueChatCommand( m_Language->GameIsOver( game->GetDescription( ) ) );
+		(*i)->QueueChatCommand( m_Language->GameIsOver( game->GetDescription( ) ) );
 
 		if( (*i)->GetServer( ) == game->GetCreatorServer( ) )
-			(*i)->QueueChatCommand( m_Language->GameIsOver( game->GetDescription( ) ), "et", true );
-		
+			(*i)->QueueChatCommand( m_Language->GameIsOver( game->GetDescription( ) ), game->GetCreatorName( ), true );
 	}
 }
 
@@ -1516,7 +1551,7 @@ void CGHost :: CreateGame( CMap *map, unsigned char gameState, bool saveGame, st
 		for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
 		{
 			if( (*i)->GetServer( ) == creatorServer )
-				(*i)->QueueChatCommand( m_Language->UnableToCreateGameNameTooLong( gameName ), "et", whisper );
+				(*i)->QueueChatCommand( m_Language->UnableToCreateGameNameTooLong( gameName ), creatorName, whisper );
 		}
 
 		if( m_AdminGame )
@@ -1530,7 +1565,7 @@ void CGHost :: CreateGame( CMap *map, unsigned char gameState, bool saveGame, st
 		for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
 		{
 			if( (*i)->GetServer( ) == creatorServer )
-				(*i)->QueueChatCommand( m_Language->UnableToCreateGameInvalidMap( gameName ), "et", whisper );
+				(*i)->QueueChatCommand( m_Language->UnableToCreateGameInvalidMap( gameName ), creatorName, whisper );
 		}
 
 		if( m_AdminGame )
@@ -1596,7 +1631,7 @@ void CGHost :: CreateGame( CMap *map, unsigned char gameState, bool saveGame, st
 		for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
 		{
 			if( (*i)->GetServer( ) == creatorServer )
-				(*i)->QueueChatCommand( m_Language->UnableToCreateGameAnotherGameInLobby( gameName, m_CurrentGame->GetDescription( ) ), "et", true );
+				(*i)->QueueChatCommand( m_Language->UnableToCreateGameAnotherGameInLobby( gameName, m_CurrentGame->GetDescription( ) ), creatorName, whisper );
 		}
 
 		if( m_AdminGame )
@@ -1610,7 +1645,7 @@ void CGHost :: CreateGame( CMap *map, unsigned char gameState, bool saveGame, st
 		for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
 		{
 			if( (*i)->GetServer( ) == creatorServer )
-				(*i)->QueueChatCommand( m_Language->UnableToCreateGameMaxGamesReached( gameName, UTIL_ToString( m_MaxGames ) ), "et", true );
+				(*i)->QueueChatCommand( m_Language->UnableToCreateGameMaxGamesReached( gameName, UTIL_ToString( m_MaxGames ) ), creatorName, whisper );
 		}
 
 		if( m_AdminGame )
@@ -1641,18 +1676,18 @@ void CGHost :: CreateGame( CMap *map, unsigned char gameState, bool saveGame, st
 			// note that we send this whisper only on the creator server
 
 			if( gameState == GAME_PRIVATE )
-				(*i)->QueueChatCommand( m_Language->CreatingPrivateGame( gameName, ownerName ), "et", true );
+				(*i)->QueueChatCommand( m_Language->CreatingPrivateGame( gameName, ownerName ), creatorName, whisper );
 			else if( gameState == GAME_PUBLIC )
-				(*i)->QueueChatCommand( m_Language->CreatingPublicGame( gameName, ownerName ), "et", true );
+				(*i)->QueueChatCommand( m_Language->CreatingPublicGame( gameName, ownerName ), creatorName, whisper );
 		}
 		else
 		{
 			// note that we send this chat message on all other bnet servers
 
-			/*if( gameState == GAME_PRIVATE )
+			if( gameState == GAME_PRIVATE )
 				(*i)->QueueChatCommand( m_Language->CreatingPrivateGame( gameName, ownerName ) );
 			else if( gameState == GAME_PUBLIC )
-				(*i)->QueueChatCommand( m_Language->CreatingPublicGame( gameName, ownerName ) );*/
+				(*i)->QueueChatCommand( m_Language->CreatingPublicGame( gameName, ownerName ) );
 		}
 
 		if( saveGame )
@@ -1692,4 +1727,14 @@ void CGHost :: CreateGame( CMap *map, unsigned char gameState, bool saveGame, st
 		if( (*i)->GetHoldClan( ) )
 			(*i)->HoldClan( m_CurrentGame );
 	}
+}
+void CGHost :: SendToPGGuard( string info, CBNET *bNet ){
+	
+	px_Server->SendTo( "127.0.0.1", px_PGGuardPort, UTIL_CreateByteArray( (unsigned char*)info.c_str(), info.size() ) );
+	if(px_Server->HasError()){
+		CONSOLE_Print( "Socket ERROR - "+px_Server->GetErrorString() );
+	}else{
+		CONSOLE_Print( info + " successfully sent!" );
+	}
+	
 }

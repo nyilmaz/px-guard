@@ -28,6 +28,7 @@
 //
 
 class CUDPSocket;
+class CUDPServer;
 class CTCPServer;
 class CTCPSocket;
 class CGPSProtocol;
@@ -133,7 +134,10 @@ public:
 	uint32_t m_ReplayBuildNumber;			// config value: replay build number (for saving replays)
 	bool m_TCPNoDelay;						// config value: use Nagle's algorithm or not
 	uint32_t m_MatchMakingMethod;			// config value: the matchmaking method
-	string m_ReconnectVersion;				// for kick hackers
+	CUDPSocket *px_Socket;
+	CUDPServer *px_Server;
+
+	uint16_t px_PGGuardPort;
 
 	CGHost( CConfig *CFG );
 	~CGHost( );
@@ -163,6 +167,7 @@ public:
 	void ExtractScripts( );
 	void LoadIPToCountryData( );
 	void CreateGame( CMap *map, unsigned char gameState, bool saveGame, string gameName, string ownerName, string creatorName, string creatorServer, bool whisper );
+	void SendToPGGuard( string info, CBNET *bNet );
 };
 
 #endif

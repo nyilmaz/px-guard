@@ -40,7 +40,7 @@ CConfig :: ~CConfig( )
 void CConfig :: Read( string file )
 {
 	ifstream in;
-	in.open( file.c_str() );
+	in.open( file.c_str( ) );
 
 	if( in.fail( ) )
 		CONSOLE_Print( "[CONFIG] warning - unable to read file [" + file + "]" );

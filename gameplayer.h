@@ -26,7 +26,6 @@ class CCommandPacket;
 class CGameProtocol;
 class CGame;
 class CIncomingJoinPlayer;
-class SendMsg;
 
 //
 // CPotentialPlayer
@@ -127,10 +126,6 @@ private:
 	queue<BYTEARRAY> m_GProxyBuffer;
 	uint32_t m_GProxyReconnectKey;
 	uint32_t m_LastGProxyAckTime;
-	bool m_FingerSent;
-	int m_Finger;
-	bool m_FFVoteSet;
-	bool m_RMKVoteSet;
 
 public:
 	CGamePlayer( CGameProtocol *nProtocol, CBaseGame *nGame, CTCPSocket *nSocket, unsigned char nPID, string nJoinedRealm, string nName, BYTEARRAY nInternalIP, bool nReserved );
@@ -178,10 +173,6 @@ public:
 	bool GetGProxy( )							{ return m_GProxy; }
 	bool GetGProxyDisconnectNoticeSent( )		{ return m_GProxyDisconnectNoticeSent; }
 	uint32_t GetGProxyReconnectKey( )			{ return m_GProxyReconnectKey; }
-	int GetFinger( )							{ return m_Finger; }
-	bool GetFFSet( )							{ return m_FFVoteSet; }
-	bool GetRMKSet( )							{ return m_RMKVoteSet; }
-
 
 	void SetLeftReason( string nLeftReason )										{ m_LeftReason = nLeftReason; }
 	void SetSpoofedRealm( string nSpoofedRealm )									{ m_SpoofedRealm = nSpoofedRealm; }
@@ -210,9 +201,7 @@ public:
 	void SetMuted( bool nMuted )													{ m_Muted = nMuted; }
 	void SetLeftMessageSent( bool nLeftMessageSent )								{ m_LeftMessageSent = nLeftMessageSent; }
 	void SetGProxyDisconnectNoticeSent( bool nGProxyDisconnectNoticeSent )			{ m_GProxyDisconnectNoticeSent = nGProxyDisconnectNoticeSent; }
-	void SetFinger( int finger )													{ m_Finger = finger; }
-	void SetFFVoted( bool set )														{ m_FFVoteSet = set; }
-	void SetRMKVoted( bool set )													{ m_RMKVoteSet = set; }
+
 	string GetNameTerminated( );
 	uint32_t GetPing( bool LCPing );
 

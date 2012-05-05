@@ -22,12 +22,11 @@
 #define GAME_BASE_H
 
 #include "gameslot.h"
-#include "ghostdb.h"
 
 //
 // CBaseGame
 //
-class SendMsg;
+
 class CTCPServer;
 class CGameProtocol;
 class CPotentialPlayer;
@@ -40,7 +39,6 @@ class CIncomingAction;
 class CIncomingChatPlayer;
 class CIncomingMapSize;
 class CCallableScoreCheck;
-
 
 class CBaseGame
 {
@@ -126,33 +124,6 @@ protected:
 	bool m_AutoSave;								// if we should auto save the game before someone disconnects
 	bool m_MatchMaking;								// if matchmaking mode is enabled
 	bool m_LocalAdminMessages;						// if local admin messages should be relayed or not
-	uint32_t m_StartedFFTime;
-	string m_FFTeam;
-	bool m_FFSucceeded;
-	unsigned char m_FFVotes;
-	uint32_t m_FFKickTime;
-	bool m_FFStarted;
-
-	bool m_RMKStarted;
-	unsigned char m_RMKVoted;
-	unsigned char m_RMKVoteNeeded;
-	uint32_t m_StartedRMKTime;
-
-	bool m_GameEndCountDownStarted;
-	uint32_t m_GameEndCountDownCounter;
-	uint32_t m_GameEndLastCountDownTicks;
-
-	uint32_t m_EndMarkerTime;
-
-	string m_LastBanned;					// not to ban a player 2 or more times
-
-	string m_MapType;						// we check if the map is dota for saving stats
-
-	uint32_t m_DatabaseID;					// replays are saved db id named
-
-	vector<SendMsg *> m_Msg;				// for wrong gproxy attention
-
-	bool m_BanlastAvailable;
 
 public:
 	CBaseGame( CGHost *nGHost, CMap *nMap, CSaveGame *nSaveGame, uint16_t nHostPort, unsigned char nGameState, string nGameName, string nOwnerName, string nCreatorName, string nCreatorServer );
@@ -292,14 +263,11 @@ public:
 	virtual void StartCountDown( bool force );
 	virtual void StartCountDownAuto( bool requireSpoofChecks );
 	virtual void StopPlayers( string reason );
-	virtual void StopPlayers2( string reason, bool draw );
 	virtual void StopLaggers( string reason );
 	virtual void CreateVirtualHost( );
 	virtual void DeleteVirtualHost( );
 	virtual void CreateFakePlayer( );
 	virtual void DeleteFakePlayer( );
-	virtual void KickHacker( string User, string Reason );
-	virtual void DelDelayMsg( );
 };
 
 #endif

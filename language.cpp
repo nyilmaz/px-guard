@@ -44,7 +44,6 @@ string CLanguage :: UnableToCreateGameTryAnotherName( string server, string game
 	UTIL_Replace( Out, "$SERVER$", server );
 	UTIL_Replace( Out, "$GAMENAME$", gamename );
 	return Out;
-	return gamename.append("'").append("0");
 }
 
 string CLanguage :: UserIsAlreadyAnAdmin( string server, string user )
@@ -231,21 +230,19 @@ string CLanguage :: GameNumberDoesntExist( string number )
 
 string CLanguage :: GameIsInTheLobby( string description, string current, string max )
 {
-	/*string Out = m_CFG->GetString( "lang_0026", "lang_0026" );
+	string Out = m_CFG->GetString( "lang_0026", "lang_0026" );
 	UTIL_Replace( Out, "$DESCRIPTION$", description );
 	UTIL_Replace( Out, "$CURRENT$", current );
 	UTIL_Replace( Out, "$MAX$", max );
-	return Out;*/
-	return current.append(" ").append(max).append(" ").append("1");
+	return Out;
 }
 
 string CLanguage :: ThereIsNoGameInTheLobby( string current, string max )
 {
-	/*string Out = m_CFG->GetString( "lang_0027", "lang_0027" );
+	string Out = m_CFG->GetString( "lang_0027", "lang_0027" );
 	UTIL_Replace( Out, "$CURRENT$", current );
 	UTIL_Replace( Out, "$MAX$", max );
-	return Out;*/
-	return current.append(" ").append(max).append(" ").append("0");
+	return Out;
 }
 
 string CLanguage :: UnableToLoadConfigFilesOutside( )
@@ -269,20 +266,18 @@ string CLanguage :: UnableToLoadConfigFileDoesntExist( string file )
 
 string CLanguage :: CreatingPrivateGame( string gamename, string user )
 {
-	/*string Out = m_CFG->GetString( "lang_0031", "lang_0031" );
+	string Out = m_CFG->GetString( "lang_0031", "lang_0031" );
 	UTIL_Replace( Out, "$GAMENAME$", gamename );
 	UTIL_Replace( Out, "$USER$", user );
-	return Out;*/
-	return "priv "+user+" "+gamename;
+	return Out;
 }
 
 string CLanguage :: CreatingPublicGame( string gamename, string user )
 {
-	/*string Out = m_CFG->GetString( "lang_0032", "lang_0032" );
+	string Out = m_CFG->GetString( "lang_0032", "lang_0032" );
 	UTIL_Replace( Out, "$GAMENAME$", gamename );
 	UTIL_Replace( Out, "$USER$", user );
-	return Out;*/
-	return "pub "+user+" "+gamename;
+	return Out;
 }
 
 string CLanguage :: UnableToUnhostGameCountdownStarted( string description )
@@ -296,15 +291,12 @@ string CLanguage :: UnhostingGame( string description )
 {
 	string Out = m_CFG->GetString( "lang_0034", "lang_0034" );
 	UTIL_Replace( Out, "$DESCRIPTION$", description );
-	return "unhost " + Out;
-	
+	return Out;
 }
 
 string CLanguage :: UnableToUnhostGameNoGameInLobby( )
 {
-	/*return m_CFG->GetString( "lang_0035", "lang_0035" );*/
-	return "nunhost";
-
+	return m_CFG->GetString( "lang_0035", "lang_0035" );
 }
 
 string CLanguage :: VersionAdmin( string version )
@@ -323,11 +315,10 @@ string CLanguage :: VersionNotAdmin( string version )
 
 string CLanguage :: UnableToCreateGameAnotherGameInLobby( string gamename, string description )
 {
-	/*string Out = m_CFG->GetString( "lang_0038", "lang_0038" );
+	string Out = m_CFG->GetString( "lang_0038", "lang_0038" );
 	UTIL_Replace( Out, "$GAMENAME$", gamename );
 	UTIL_Replace( Out, "$DESCRIPTION$", description );
-	return Out;*/
-	return "nhost";
+	return Out;
 }
 
 string CLanguage :: UnableToCreateGameMaxGamesReached( string gamename, string max )
@@ -342,8 +333,7 @@ string CLanguage :: GameIsOver( string description )
 {
 	string Out = m_CFG->GetString( "lang_0040", "lang_0040" );
 	UTIL_Replace( Out, "$DESCRIPTION$", description );
-	
-	return "over "+Out;
+	return Out;
 }
 
 string CLanguage :: SpoofCheckByReplying( )
