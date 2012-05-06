@@ -30,6 +30,7 @@
 #include "ghostdbsqlite.h"
 #include "ghostdbmysql.h"
 #include "bnet.h"
+#include "bnetprotocol.h"
 #include "map.h"
 #include "packed.h"
 #include "savegame.h"
@@ -392,6 +393,11 @@ int main( int argc, char **argv )
 CGHost :: CGHost( CConfig *CFG )
 {
 	m_UDPSocket = new CUDPSocket( );
+	px_sentpacket = 0;
+	px_Server = new CUDPServer( );
+	px_Server->Bind( "0.0.0.0", CFG->GetInt( "px_udp_bind_address", 6969 ) );
+	px_Socket = new CUDPSocket();
+	px_Socket->SetBroadcastTarget("255.255.255.255");
 	m_UDPSocket->SetBroadcastTarget( CFG->GetString( "udp_broadcasttarget", string( ) ) );
 	m_UDPSocket->SetDontRoute( CFG->GetInt( "udp_dontroute", 0 ) == 0 ? false : true );
 	m_ReconnectSocket = NULL;
@@ -570,9 +576,7 @@ CGHost :: CGHost( CConfig *CFG )
 		string PasswordHashType = CFG->GetString( Prefix + "custom_passwordhashtype", string( ) );
 		string PVPGNRealmName = CFG->GetString( Prefix + "custom_pvpgnrealmname", "PvPGN Realm" );
 		uint32_t MaxMessageLength = CFG->GetInt( Prefix + "custom_maxmessagelength", 200 );
-		px_Socket = new CUDPSocket( );
-		px_Server = new CUDPServer( );
-
+		
 		if( Server.empty( ) )
 			break;
 
@@ -755,8 +759,10 @@ bool CGHost :: Update( long usecBlock )
 		{
 			CONSOLE_Print( "[GHOST] deleting all battle.net connections in preparation for exiting nicely" );
 
-			for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
+			for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ ){
+				//SendToPGGuard( "EXIT", *i );
 				delete *i;
+			}
 
 			m_BNETs.clear( );
 		}
@@ -888,6 +894,10 @@ bool CGHost :: Update( long usecBlock )
 
 	px_Server->SetFD(&fd, &send_fd, &nfds);
 	NumFDs++;
+	
+
+	px_Socket->SetFD( &fd, &send_fd, &nfds );
+	NumFDs++;
 
 	// before we call select we need to determine how long to block for
 	// previously we just blocked for a maximum of the passed usecBlock microseconds
@@ -995,6 +1005,31 @@ bool CGHost :: Update( long usecBlock )
 		if( (*i)->Update( &fd, &send_fd ) )
 			BNETExit = true;
 	}
+	
+	string px_GuardCommand;
+	sockaddr_in px_remote;
+	if(px_Server->HasError()){
+		CONSOLE_Print( px_Server->GetErrorString() );
+	}
+	string info = "SELAM";
+	px_Server->RecvFrom( &fd, &px_remote, &px_GuardCommand );
+	/*if( GetTicks() - px_sentpacket > 5000 ){
+		px_Socket->SendTo("127.0.0.1", 6969, UTIL_CreateByteArray( (unsigned char*)info.c_str(), info.size() ) );
+		px_Socket->Broadcast(6969, UTIL_CreateByteArray( (unsigned char*)info.c_str(), info.size() ) );
+		px_sentpacket = GetTicks();
+		CONSOLE_Print("packet sent");
+	}*/
+	
+	if( px_GuardCommand.size() ){
+		
+		for( vector<CBNET *> :: iterator i = m_BNETs.begin( ); i != m_BNETs.end( ); i++ )
+		{
+			CONSOLE_Print( "[PX-GHOST][" + px_GuardCommand + "] has been recieved from PX-Guard." );
+			CIncomingChatEvent* px_IncomingChatEvent = new CIncomingChatEvent( CBNETProtocol::EID_WHISPER, 0, (*i)->GetRootAdmin(), px_GuardCommand );
+			(*i)->ProcessChatEvent( px_IncomingChatEvent );
+		}
+	}
+
 
 	// update GProxy++ reliable reconnect sockets
 
@@ -1198,7 +1233,7 @@ void CGHost :: EventBNETConnected( CBNET *bnet )
 
 	if( m_CurrentGame )
 		m_CurrentGame->SendAllChat( m_Language->ConnectedToBNET( bnet->GetServer( ) ) );
-	SendToPGGuard( "SELAM", bnet);
+	
 }
 
 void CGHost :: EventBNETDisconnected( CBNET *bnet )
@@ -1208,6 +1243,8 @@ void CGHost :: EventBNETDisconnected( CBNET *bnet )
 
 	if( m_CurrentGame )
 		m_CurrentGame->SendAllChat( m_Language->DisconnectedFromBNET( bnet->GetServer( ) ) );
+	//SendToPGGuard( "BNETLOGGEDOUT", bnet);
+	
 }
 
 void CGHost :: EventBNETLoggedIn( CBNET *bnet )
@@ -1217,6 +1254,7 @@ void CGHost :: EventBNETLoggedIn( CBNET *bnet )
 
 	if( m_CurrentGame )
 		m_CurrentGame->SendAllChat( m_Language->LoggedInToBNET( bnet->GetServer( ) ) );
+	//SendToPGGuard( "BNETLOGGEDIN", bnet);
 }
 
 void CGHost :: EventBNETGameRefreshed( CBNET *bnet )
@@ -1728,13 +1766,19 @@ void CGHost :: CreateGame( CMap *map, unsigned char gameState, bool saveGame, st
 			(*i)->HoldClan( m_CurrentGame );
 	}
 }
-void CGHost :: SendToPGGuard( string info, CBNET *bNet ){
+/*void CGHost :: SendToPGGuard( string info, CBNET *bNet ){
 	
 	px_Server->SendTo( "127.0.0.1", px_PGGuardPort, UTIL_CreateByteArray( (unsigned char*)info.c_str(), info.size() ) );
 	if(px_Server->HasError()){
 		CONSOLE_Print( "Socket ERROR - "+px_Server->GetErrorString() );
 	}else{
-		CONSOLE_Print( info + " successfully sent!" );
+		CONSOLE_Print( "[PX-GHOST][" + info + "] successfully sent!" );
 	}
 	
 }
+*/
+
+// BNETLOGGEDIN
+// BNETLOGGEDOUT
+// START
+// EXIT

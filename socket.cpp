@@ -762,15 +762,17 @@ bool CUDPServer :: Bind( string address, uint16_t port )
 
 void CUDPServer :: RecvFrom( fd_set *fd, struct sockaddr_in *sin, string *message )
 {
-	if( m_Socket == INVALID_SOCKET || m_HasError || !sin || !message )
+	if( m_Socket == INVALID_SOCKET || m_HasError || !sin || !message ){
+		
 		return;
+	}
 
 	int AddrLen = sizeof( *sin );
-
+	
 	if( FD_ISSET( m_Socket, fd ) )
 	{
 		// data is waiting, receive it
-
+		CONSOLE_Print( "DEBUUUUUUUUUUUUUUUUUUUUUG" );
 		char buffer[1024];
 
 #ifdef WIN32

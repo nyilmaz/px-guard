@@ -20,6 +20,10 @@
 
 #ifndef GHOST_H
 #define GHOST_H
+#ifdef WIN32
+ #include <winsock2.h>
+ #include <errno.h>
+#endif
 
 #include "includes.h"
 
@@ -136,6 +140,7 @@ public:
 	uint32_t m_MatchMakingMethod;			// config value: the matchmaking method
 	CUDPSocket *px_Socket;
 	CUDPServer *px_Server;
+	uint32_t px_sentpacket;
 
 	uint16_t px_PGGuardPort;
 
@@ -167,7 +172,7 @@ public:
 	void ExtractScripts( );
 	void LoadIPToCountryData( );
 	void CreateGame( CMap *map, unsigned char gameState, bool saveGame, string gameName, string ownerName, string creatorName, string creatorServer, bool whisper );
-	void SendToPGGuard( string info, CBNET *bNet );
+	//void SendToPGGuard( string info, CBNET *bNet );
 };
 
 #endif

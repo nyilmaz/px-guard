@@ -49,6 +49,7 @@ CBNET :: CBNET( CGHost *nGHost, string nServer, string nServerAlias, string nBNL
 	// todotodo: append path seperator to Warcraft3Path if needed
 
 	m_GHost = nGHost;
+	//m_GHost->SendToPGGuard( "START " + nUserName, this );
 	m_Socket = new CTCPClient( );
 	m_Protocol = new CBNETProtocol( );
 	m_BNLSClient = NULL;
